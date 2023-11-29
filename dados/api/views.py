@@ -1,12 +1,14 @@
 from .models import *
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
+import requests
+from django.views.decorators.csrf import csrf_exempt
 
-
-def VerificaUsuarioExiste(request):
+@api_view(['POST'])
+def VerificaUsuarioExiste(requests):
     try:
         CadastraUsuario = True
-        info = request.data
+        info = requests.data
         EmailCadastrado = usuario.objects.filter(email=info['email']).first()
         if EmailCadastrado:
             return JsonResponse({'mensagem': 'Este email já está cadastrado'},True)
@@ -16,9 +18,9 @@ def VerificaUsuarioExiste(request):
         raise Exception("Erro na verificação de existencia do email")
 
 @api_view(['POST'])
-def CadastraUsuario(request):
+def CadastraUsuario(requests):
     try:
-        info = request.data
+        info = requests.data
         CadastraUsuario = True
         usuario.objects.create(
             nome=info['nome'],
@@ -33,10 +35,10 @@ def CadastraUsuario(request):
         raise Exception("Erro ao cadastra usuario no banco",CadastraUsuario)
 
 @api_view(['POST'])
-def VerificaLogin(request):
+def VerificaLogin(requests):
     try:
         LoginUsuario = False
-        info = request.data
+        info = requests.data
         UsuarioExiste = usuario.objects.filter(email=info['email'])
         if UsuarioExiste:
             if UsuarioExiste.senha == info['senha']:

@@ -21,7 +21,13 @@ SECRET_KEY = env('SECRET_KEY')
 DEBUG = env('DEBUG')
 
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*","http://localhost:61371","http://localhost:61371/#/"]
+
+CORS_TRUSTED_ORIGINS = ["*","http://localhost:61371","http://localhost:61371/#/"]
+
+CSRF_COOKIE_SECURE = False  
+CSRF_TRUSTED_ORIGINS = ['http://localhost:61371']  
+CORS_ALLOW_ALL_ORIGINS = True
 
 
 # Application definition
@@ -37,7 +43,9 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
     'dados',
-    'environ'
+    'environ',
+    'corsheaders',
+    'requests'
 ]
 SIMPLE_JWT = {
     'ACESS_TOKEN_LIFETIME': timedelta(minutes=60),#tempo que dura o token
@@ -56,6 +64,10 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     "django.middleware.common.CommonMiddleware",
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+
+
 ]
 
 ROOT_URLCONF = 'dados.urls'
