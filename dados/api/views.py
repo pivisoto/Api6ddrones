@@ -40,6 +40,7 @@ def VerificaLogin(request):
         UsuarioExiste = usuario.objects.filter(email=info['email'])
         if UsuarioExiste:
             if UsuarioExiste.senha == info['senha']:
+                LoginUsuario = True
                 return JsonResponse({"mensagem:" "Login efetuado",LoginUsuario})
             else:
                 return JsonResponse({'mensagem:' 'Email cadastrado porém senha esta errada',LoginUsuario})

@@ -22,7 +22,7 @@ class usuario(models.Model):
     senha = models.CharField(max_length=30)
     imagemPerfil = models.BinaryField(null=True)
     endereco = models.CharField(max_length=50)
-    celular = models.IntegerField()
+    celular = models.CharField()
     idUsuario = models.AutoField(primary_key=True)
     idProjeto = models.ForeignKey(projeto,on_delete=models.CASCADE,null=True)
     idOrganizador = models.ForeignKey(organizacao,on_delete=models.CASCADE,null=True)

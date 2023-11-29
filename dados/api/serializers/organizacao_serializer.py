@@ -1,4 +1,4 @@
-from dados.models import organizacao;
+from api.models import organizacao;
 from rest_framework import serializers;
 class organizacaoSerializer(serializers.ModelSerializer):
         class Meta:
