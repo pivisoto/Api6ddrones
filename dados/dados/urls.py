@@ -5,5 +5,6 @@ from api import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('verifica_usuario_existe/',views.VerificaUsuarioExiste)
+    path('verifica_usuario_existe/',views.VerificaUsuarioExiste),
+    path('verificaLogin',views.VerificaLogin),
 ]

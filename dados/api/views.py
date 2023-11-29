@@ -5,10 +5,11 @@ from rest_framework.decorators import api_view
 
 def VerificaUsuarioExiste(request):
     try:
+        CadastraUsuario = True
         info = request.data
         EmailCadastrado = usuario.objects.filter(email=info['email']).first()
         if EmailCadastrado:
-            return JsonResponse({'mensagem': 'Este email já está cadastrado'})
+            return JsonResponse({'mensagem': 'Este email já está cadastrado'},True)
         else:
             return CadastraUsuario
     except: 
