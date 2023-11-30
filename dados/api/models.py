@@ -21,7 +21,6 @@ class usuario(models.Model):
     email = models.CharField(max_length=40,unique=True)
     senha = models.CharField(max_length=30)
     imagemPerfil = models.BinaryField(null=True)
-    endereco = models.CharField(max_length=50)
     celular = models.CharField()
     idUsuario = models.AutoField(primary_key=True)
     idProjeto = models.ForeignKey(projeto,on_delete=models.CASCADE,null=True)
