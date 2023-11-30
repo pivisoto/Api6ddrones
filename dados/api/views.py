@@ -2,6 +2,7 @@ from .models import *
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.hashers import check_password
 
 
 @api_view(['POST'])
@@ -32,19 +33,19 @@ def CadastraUsuario(request):
         return JsonResponse({'mensagem': f'Erro ao cadastrar usuário no banco: {str(e)}'}, status=500)
 
 @api_view(['POST'])
-def VerificaLogin(requests):
+def VerificaLogin(request):
     try:
         LoginUsuario = False
-        info = requests.data
-        UsuarioExiste = usuario.objects.filter(email=info['email'])
-        if UsuarioExiste:
-            if UsuarioExiste.senha == info['senha']:
+        info = request.data
+        usuario_existe = usuario.objects.filter(email=info['email']).first()
+        if usuario_existe:
+            senha = info['senha']
+            if usuario_existe.senha == senha:
                 LoginUsuario = True
-                return JsonResponse({"mensagem:" "Login efetuado",LoginUsuario})
+                return JsonResponse({"mensagem": "Login efetuado", "LoginUsuario": LoginUsuario})
             else:
-                return JsonResponse({'mensagem:' 'Email cadastrado porém senha esta errada',LoginUsuario})
+                return JsonResponse({'mensagem': 'Email cadastrado, mas a senha está incorreta', 'LoginUsuario': LoginUsuario})
         else:
-            return JsonResponse({"mensagem:" "Email não cadastrado no banco de dados",LoginUsuario})
-    except:
-        raise Exception("Erro ao verificar login",LoginUsuario)
-    
+            return JsonResponse({"mensagem": "Email não cadastrado no banco de dados", "LoginUsuario": LoginUsuario})
+    except Exception as e:
+        return JsonResponse({"mensagem": "Erro ao verificar login", "LoginUsuario": LoginUsuario, "error": str(e)})
