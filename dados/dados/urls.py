@@ -8,4 +8,5 @@ urlpatterns = [
     path('verifica_usuario_existe/',views.VerificaUsuarioExiste),
     path('verificaLogin/',views.VerificaLogin),
     path('exibeInfo/',views.ExibeInfo),
+    path('exibeOrg/',views.ExibeOrg),
 ]

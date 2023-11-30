@@ -50,26 +50,47 @@ def VerificaLogin(request):
 
 @api_view(['GET'])
 def ExibeInfo(request):
-    info = request.data
-    usuario_existe = usuario.objects.filter(email=info['email']).first()
-    nome = usuario_existe.nome
-    email = usuario_existe.email 
-    celular = usuario_existe.celular 
-    organizacao_busca = organizacao.objects.filter(idOrganizador=usuario_existe.idOrganizador_id).values('nomeOrg').first()
-    organizacao_nome = organizacao_busca['nomeOrg']
-    if organizacao_busca:
+    try:
+        info = request.data
+        usuario_existe = usuario.objects.filter(email=info['email']).first()
+        nome = usuario_existe.nome
+        email = usuario_existe.email 
+        celular = usuario_existe.celular 
+        organizacao_busca = organizacao.objects.filter(idOrganizador=usuario_existe.idOrganizador_id).values('nomeOrg').first()
+        organizacao_nome = organizacao_busca['nomeOrg']
+        if organizacao_busca:
+            ResponseData = {
+                'nome': nome,
+                'email' : email,
+                'celular' : celular,
+                'organizacao_nome' : organizacao_nome
+            }
+            print(nome,email,celular,organizacao_nome)
+        else:
+            ResponseData = {
+                'nome': nome,
+                'email' : email,
+                'celular' : celular,
+            }
+            print(nome,email,celular)
+        return JsonResponse(ResponseData)
+    except Exception as e:
+        return JsonResponse({"mensagem": "Erro ao encontrar dados de usuario","error": str(e)}, status=500)
+    
+@api_view(['GET'])
+def ExibeOrg(request):
+    try:
+        info = request.data
+        usuario_existe = usuario.objects.filter(email=info['email']).first()
+        organizacao_busca = organizacao.objects.filter(idOrganizador=usuario_existe.idOrganizador_id).values('nomeOrg','cpf_cnpj','idOrganizador').first()
+        organizacao_nome = organizacao_busca['nomeOrg']
+        organizacao_cpf = organizacao_busca['cpf_cnpj']
+        organizacao_id = organizacao_busca['idOrganizador']
         ResponseData = {
-            'nome': nome,
-            'email' : email,
-            'celular' : celular,
-            'organizacao_nome' : organizacao_nome
+                'razao_social': organizacao_nome,
+                'cpf_cnpj' : organizacao_cpf,
+                'id' : organizacao_id,
         }
-        print(nome,email,celular,organizacao_nome)
-    else:
-        ResponseData = {
-            'nome': nome,
-            'email' : email,
-            'celular' : celular,
-        }
-        print(nome,email,celular)
-    return JsonResponse(ResponseData)
+        return JsonResponse(ResponseData)
+    except Exception as e:
+        return JsonResponse({"mensagem": "Erro ao encontrar dados de organização","error": str(e)}, status=500)
