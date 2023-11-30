@@ -13,4 +13,5 @@ urlpatterns = [
     path('removeAdmOrg/',views.RemoveAdmOrg),
     path('concedeAdmInter/',views.ConcedeAdmInter),
     path('removeAdmInter/',views.RemoveAdmInter),
+    path('verificaAdmGeral/',views.VerificaAdmGeral)
 ]

@@ -95,6 +95,18 @@ def ExibeOrg(request):
     except Exception as e:
         return JsonResponse({"mensagem": "Erro ao encontrar dados de organização","error": str(e)}, status=500)
 
+@api_view(['GET'])
+def VerificaAdmGeral(request):
+    try:
+        info = request.query_params
+        usuario_existe = usuario.objects.filter(email=info['email']).first()
+        if usuario_existe.admGeral == True:
+            return JsonResponse({'mensagem': 'O usuario é um admGeral','usuario':str(usuario_existe.nome)})
+        else:
+            raise Exception({"mensagem":"Usuario não é AdmGeral", 'usuario':str(usuario_existe.nome)})
+    except Exception as e:
+        return JsonResponse({"mensagem": "Erro ao verificar","error": str(e)}, status=500)
+
 @api_view(['POST'])
 def ConcedeAdmOrg(request):
     try:
