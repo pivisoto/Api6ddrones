@@ -40,10 +40,10 @@ def VerificaLogin(request):
         if usuario_existe:
             senha = info['senha']
             if usuario_existe.senha == senha:
-                return JsonResponse({"mensagem": "Login efetuado"})
+                return JsonResponse({"mensagem": "Login efetuado"}) 
             else:
                 raise Exception({'mensagem': 'Email cadastrado, mas a senha está incorreta'})
         else:
             raise Exception({"mensagem": "Email não cadastrado no banco de dados"})
     except Exception as e:
-        return JsonResponse({"mensagem": "Erro ao verificar login","error": str(e)})
+        return JsonResponse({"mensagem": "Erro ao verificar login","error": str(e)}, status=401)
