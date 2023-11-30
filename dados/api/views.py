@@ -40,6 +40,7 @@ def VerificaLogin(request):
         if usuario_existe:
             senha = info['senha']
             if usuario_existe.senha == senha:
+                ExibeInfo(usuario_existe)
                 return JsonResponse({"mensagem": "Login efetuado"}) 
             else:
                 raise Exception({'mensagem': 'Email cadastrado, mas a senha está incorreta'})
@@ -47,3 +48,23 @@ def VerificaLogin(request):
             raise Exception({"mensagem": "Email não cadastrado no banco de dados"})
     except Exception as e:
         return JsonResponse({"mensagem": "Erro ao verificar login","error": str(e)}, status=401)
+
+def ExibeInfo(usuario_existe):
+    nome = usuario_existe.nome
+    email = usuario_existe.email 
+    celular = usuario_existe.celular 
+    organizacao_nome = organizacao.objects.filter(idOrganizador=usuario_existe.idOrganizador_id).values('nomeOrg').first()
+    if organizacao_nome:
+        ResponseData = {
+            'nome': nome,
+            'email' : email,
+            'celular' : celular,
+            'organizacao_nome' : organizacao_nome
+        }
+    else:
+        ResponseData = {
+            'nome': nome,
+            'email' : email,
+            'celular' : celular,
+        }
+    return JsonResponse(ResponseData)
