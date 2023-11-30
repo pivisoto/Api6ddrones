@@ -7,5 +7,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('verifica_usuario_existe/',views.VerificaUsuarioExiste),
     path('verificaLogin/',views.VerificaLogin),
-    path('exibeInfo',views.ExibeInfo),
+    path('exibeInfo/',views.ExibeInfo),
 ]
