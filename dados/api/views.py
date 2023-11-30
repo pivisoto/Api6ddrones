@@ -35,17 +35,15 @@ def CadastraUsuario(request):
 @api_view(['POST'])
 def VerificaLogin(request):
     try:
-        LoginUsuario = False
         info = request.data
         usuario_existe = usuario.objects.filter(email=info['email']).first()
         if usuario_existe:
             senha = info['senha']
             if usuario_existe.senha == senha:
-                LoginUsuario = True
-                return JsonResponse({"mensagem": "Login efetuado", "LoginUsuario": LoginUsuario})
+                return JsonResponse({"mensagem": "Login efetuado"})
             else:
-                return JsonResponse({'mensagem': 'Email cadastrado, mas a senha está incorreta', 'LoginUsuario': LoginUsuario})
+                raise Exception({'mensagem': 'Email cadastrado, mas a senha está incorreta'})
         else:
-            return JsonResponse({"mensagem": "Email não cadastrado no banco de dados", "LoginUsuario": LoginUsuario})
+            raise Exception({"mensagem": "Email não cadastrado no banco de dados"})
     except Exception as e:
-        return JsonResponse({"mensagem": "Erro ao verificar login", "LoginUsuario": LoginUsuario, "error": str(e)})
+        return JsonResponse({"mensagem": "Erro ao verificar login","error": str(e)})
