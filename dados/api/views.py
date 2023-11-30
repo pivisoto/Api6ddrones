@@ -53,18 +53,21 @@ def ExibeInfo(usuario_existe):
     nome = usuario_existe.nome
     email = usuario_existe.email 
     celular = usuario_existe.celular 
-    organizacao_nome = organizacao.objects.filter(idOrganizador=usuario_existe.idOrganizador_id).values('nomeOrg').first()
-    if organizacao_nome:
+    organizacao_busca = organizacao.objects.filter(idOrganizador=usuario_existe.idOrganizador_id).values('nomeOrg').first()
+    organizacao_nome = organizacao_busca['nomeOrg']
+    if organizacao:
         ResponseData = {
             'nome': nome,
             'email' : email,
             'celular' : celular,
             'organizacao_nome' : organizacao_nome
         }
+        print(nome,email,celular,organizacao_nome)
     else:
         ResponseData = {
             'nome': nome,
             'email' : email,
             'celular' : celular,
         }
+        print(nome,email,celular)
     return JsonResponse(ResponseData)
