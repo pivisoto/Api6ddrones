@@ -61,9 +61,8 @@ def ExibeInfo(request):
             'nome': nome,
             'email': email,
             'celular': celular,
-            'organizacao_nome': organizacao_nome,
+            'organizacao_nome':organizacao_nome,
         }
-
         return JsonResponse(ResponseData)
     except Exception as e:
         return JsonResponse({"mensagem": "Erro ao encontrar dados de usuario", "error": str(e)}, status=500)    
@@ -76,15 +75,78 @@ def ExibeOrg(request):
         info = request.query_params
         usuario_existe = usuario.objects.filter(email=info['email']).first()
         organizacao_busca = organizacao.objects.filter(idOrganizador=usuario_existe.idOrganizador_id).values('nomeOrg','cpf_cnpj','idOrganizador').first()
-        organizacao_nome = organizacao_busca['nomeOrg']
-        organizacao_cpf = organizacao_busca['cpf_cnpj']
-        organizacao_id = organizacao_busca['idOrganizador']
-        ResponseData = {
+        if organizacao_busca:
+            organizacao_nome = organizacao_busca['nomeOrg']
+            organizacao_cpf = organizacao_busca['cpf_cnpj']
+            organizacao_id = organizacao_busca['idOrganizador']
+            ResponseData = {
                 'razao_social': organizacao_nome,
                 'cpf_cnpj' : organizacao_cpf,
                 'id' : organizacao_id,
-        }
-        return JsonResponse(ResponseData)
+            }
+            return JsonResponse(ResponseData)
+        else:
+            ResponseData = {
+                'razao_social': 'não associado',
+                'cpf_cnpj' : 'vazio',
+                'id' : 'vazio',
+            }
+            return JsonResponse(ResponseData)
     except Exception as e:
         return JsonResponse({"mensagem": "Erro ao encontrar dados de organização","error": str(e)}, status=500)
 
+@api_view(['POST'])
+def ConcedeAdmOrg(request):
+    try:
+        info = request.data
+        usuario_existe = usuario.objects.filter(email=info['email']).first()
+        if usuario_existe:
+            usuario_existe.admOrg = True
+            usuario_existe.save()
+            return JsonResponse({'mensagem':'Usuario é admin Org' ,'usuario':str(usuario_existe.nome)})
+        else:
+            raise Exception({'usuario não encontrado'})
+    except Exception as e:
+        return JsonResponse({"mensagem": "Erro ao encontrar usuario","error": str(e)}, status=500)
+    
+@api_view(['POST'])
+def RemoveAdmOrg(request):
+    try:
+        info = request.data
+        usuario_existe = usuario.objects.filter(email=info['email']).first()
+        if usuario_existe:
+            usuario_existe.admOrg = False
+            usuario_existe.save()
+            return JsonResponse({'mensagem':'Usuario não é admin Org' ,'usuario':str(usuario_existe.nome)})
+        else:
+            raise Exception({'usuario não encontrado'})
+    except Exception as e:
+        return JsonResponse({"mensagem": "Erro ao encontrar usuario","error": str(e)}, status=500)
+    
+@api_view(['POST'])
+def ConcedeAdmInter(request):
+    try:
+        info = request.data
+        usuario_existe = usuario.objects.filter(email=info['email']).first()
+        if usuario_existe:
+            usuario_existe.admInter = True
+            usuario_existe.save()
+            return JsonResponse({'mensagem':'Usuario é admin Inter' ,'usuario':str(usuario_existe.nome)})
+        else:
+            raise Exception({'usuario não encontrado'})
+    except Exception as e:
+        return JsonResponse({"mensagem": "Erro ao encontrar usuario","error": str(e)}, status=500)
+    
+@api_view(['POST'])
+def RemoveAdmInter(request):
+    try:
+        info = request.data
+        usuario_existe = usuario.objects.filter(email=info['email']).first()
+        if usuario_existe:
+            usuario_existe.admInter = False
+            usuario_existe.save()
+            return JsonResponse({'mensagem':'Usuario não é admin Inter' ,'usuario':str(usuario_existe.nome)})
+        else:
+            raise Exception({'usuario não encontrado'})
+    except Exception as e:
+        return JsonResponse({"mensagem": "Erro ao encontrar usuario","error": str(e)}, status=500)

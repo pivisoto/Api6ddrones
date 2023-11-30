@@ -1,7 +1,7 @@
 from django.db import models
 
 class organizacao(models.Model):
-    idOrganizador = models.IntegerField(primary_key=True)
+    idOrganizador = models.AutoField(primary_key=True)
     pj_pf = models.CharField(max_length=40)
     cpf_cnpj = models.CharField()
     endContsocial = models.CharField(max_length=50)
