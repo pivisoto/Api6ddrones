@@ -28,3 +28,5 @@ class usuario(models.Model):
     admGeral = models.BooleanField(default=False)
     admOrg = models.BooleanField(default=False)
     admInter = models.BooleanField(default=False)
+
+    
