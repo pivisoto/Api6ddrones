@@ -90,22 +90,32 @@ def ExibeOrg(request):
     try:
         info = request.query_params
         usuario_existe = usuario.objects.filter(email=info['email']).first()
-        organizacao_busca = organizacao.objects.filter(idOrganizador=usuario_existe.idOrganizador_id).values('nomeOrg','cpf_cnpj','idOrganizador').first()
+        organizacao_busca = organizacao.objects.filter(idOrganizador=usuario_existe.idOrganizador_id).values('nomeOrg','cpf_cnpj','idOrganizador','endContsocial','pj_pf').first()
         if organizacao_busca:
             organizacao_nome = organizacao_busca['nomeOrg']
             organizacao_cpf = organizacao_busca['cpf_cnpj']
             organizacao_id = organizacao_busca['idOrganizador']
+            organizacao_endereco = organizacao_busca['endContsocial']
+            organizacao_razao = organizacao_busca['pj_pf']
+            
             ResponseData = {
                 'razao_social': organizacao_nome,
-                'cpf_cnpj' : organizacao_cpf,
+                'pj_pf': organizacao_razao,
+                'cpf_cnpj':organizacao_cpf,
+                'endContsocial': organizacao_endereco,
                 'id' : organizacao_id,
+                'projetos_associados':'vazio'
             }
             return JsonResponse(ResponseData)
         else:
             ResponseData = {
-                'razao_social': 'não associado',
+                'razao_social':'não associado',
+                'pj_pf': 'vazio',
                 'cpf_cnpj' : 'vazio',
+                'endContsocial': 'vazio',
                 'id' : 'vazio',
+                'projetos_associados':'vazio',
+                
             }
             return JsonResponse(ResponseData)
     except Exception as e:
