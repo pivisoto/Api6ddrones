@@ -9,6 +9,7 @@ urlpatterns = [
     path('verificaLogin/',views.VerificaLogin),
     path('exibeInfo/',views.ExibeInfo),
     path('criarOrg/',views.CriaOrg),
+    path('defineIdOrganizador/',views.DefineIdOrganizador),
     path('exibeOrg/',views.ExibeOrg),
     path('concedeAdmOrg/',views.ConcedeAdmOrg),
     path('removeAdmOrg/',views.RemoveAdmOrg),

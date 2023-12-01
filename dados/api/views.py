@@ -74,6 +74,7 @@ def CriaOrg(request):
         usuario_existe = usuario.objects.filter(email=info['email']).first()
         if usuario_existe and (usuario_existe.admGeral == True):
             organizacao_obj = organizacao.objects.create(
+                responsavel = info['responsavel'],
                 pj_pf=info['pj_pf'],
                 cpf_cnpj=info['cpf_cnpj'],
                 endContsocial=info['endContsocial'],
@@ -84,21 +85,36 @@ def CriaOrg(request):
             raise Exception({'mensagem':'Usuário nao e admin'})
     except Exception as e:
         return JsonResponse({'mensagem': f'Erro ao cadastrar organizacao no banco: {str(e)}'}, status=500)
+
+@api_view(['POST'])
+def DefineIdOrganizador(request):
+    try:
+        info = request.data
+        usuario_existe = usuario.objects.filter(email=info['email']).first()
+        if usuario_existe is not None:
+            usuario_existe.idOrganizador_id = info['idOrganizador']
+            usuario_existe.save()
+            return JsonResponse({'mensagem': 'ID do Organizador definido com sucesso'})
+        else:
+            return JsonResponse({'mensagem': 'Usuário não encontrado'}, status=400, safe=False)
+    except Exception as e:
+        return JsonResponse({'mensagem': f'Não foi possível definir o idOrganizador: {str(e)}'}, status=400, safe=False)
     
 @api_view(['GET'])
 def ExibeOrg(request):
     try:
         info = request.query_params
         usuario_existe = usuario.objects.filter(email=info['email']).first()
-        organizacao_busca = organizacao.objects.filter(idOrganizador=usuario_existe.idOrganizador_id).values('nomeOrg','cpf_cnpj','idOrganizador','endContsocial','pj_pf').first()
+        organizacao_busca = organizacao.objects.filter(idOrganizador=usuario_existe.idOrganizador_id).values('responsavel','nomeOrg','cpf_cnpj','idOrganizador','endContsocial','pj_pf').first()
         if organizacao_busca:
-            organizacao_nome = organizacao_busca['nomeOrg']
+            organizacao_responsavel = organizacao_busca['responsavel']
             organizacao_cpf = organizacao_busca['cpf_cnpj']
             organizacao_id = organizacao_busca['idOrganizador']
             organizacao_endereco = organizacao_busca['endContsocial']
             organizacao_razao = organizacao_busca['pj_pf']
-            
+            organizacao_nome = organizacao_busca['nomeOrg']
             ResponseData = {
+                'responsavel': organizacao_responsavel,
                 'razao_social': organizacao_nome,
                 'pj_pf': organizacao_razao,
                 'cpf_cnpj':organizacao_cpf,

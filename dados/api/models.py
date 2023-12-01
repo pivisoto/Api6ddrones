@@ -7,6 +7,7 @@ class organizacao(models.Model):
     endContsocial = models.CharField(max_length=50)
     docOrganizacao = models.BinaryField(null=True)
     nomeOrg = models.CharField(max_length=30)
+    responsavel = models.CharField(max_length=45,null=True)
 
 class projeto(models.Model):
     nomeProjeto = models.CharField(max_length=40)
@@ -28,5 +29,3 @@ class usuario(models.Model):
     admGeral = models.BooleanField(default=False)
     admOrg = models.BooleanField(default=False)
     admInter = models.BooleanField(default=False)
-
-    
