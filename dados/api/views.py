@@ -41,7 +41,7 @@ def VerificaLogin(request):
             if usuario_existe.senha == senha:
                 return JsonResponse({"mensagem": "Login efetuado"}) 
             else:
-                raise Exception({'mensagem': 'Senha incorreta'},status=401)
+                raise Exception({'mensagem': 'Senha incorreta'})
         else:
             raise Exception({"mensagem": "Email não cadastrado no banco de dados"})
     except Exception as e:
@@ -67,8 +67,24 @@ def ExibeInfo(request):
     except Exception as e:
         return JsonResponse({"mensagem": "Erro ao encontrar dados de usuario", "error": str(e)}, status=500)    
 
-
-
+@api_view(['POST'])
+def CriaOrg(request):
+    try:
+        info = request.data
+        usuario_existe = usuario.objects.filter(email=info['email']).first()
+        if usuario_existe and (usuario_existe.admOrg or usuario_existe.admGeral):
+            organizacao_obj = organizacao.objects.create(
+                pj_pf=info['pj_pf'],
+                cpf_cnpj=info['cpf_cnpj'],
+                endContsocial=info['endContsocial'],
+                nomeOrg=info['nomeOrg'],
+            )
+            return JsonResponse({'mensagem': 'Organizacao cadastrada'})
+        else:
+            raise Exception({'mensagem':'Usuário nao e admin'})
+    except Exception as e:
+        return JsonResponse({'mensagem': f'Erro ao cadastrar organizacao no banco: {str(e)}'}, status=500)
+    
 @api_view(['GET'])
 def ExibeOrg(request):
     try:

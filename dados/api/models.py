@@ -3,9 +3,9 @@ from django.db import models
 class organizacao(models.Model):
     idOrganizador = models.AutoField(primary_key=True)
     pj_pf = models.CharField(max_length=40)
-    cpf_cnpj = models.CharField()
+    cpf_cnpj = models.CharField(unique=True)
     endContsocial = models.CharField(max_length=50)
-    docOrganizacao = models.BinaryField()
+    docOrganizacao = models.BinaryField(null=True)
     nomeOrg = models.CharField(max_length=30)
 
 class projeto(models.Model):

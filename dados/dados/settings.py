@@ -20,13 +20,14 @@ SECRET_KEY = env('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG')
 
-
 ALLOWED_HOSTS = ["*","http://localhost:61371","http://localhost:61371/#/"]
 
 CORS_TRUSTED_ORIGINS = ["*","http://localhost:61371","http://localhost:61371/#/"]
 
-CSRF_COOKIE_SECURE = False  
-CSRF_TRUSTED_ORIGINS = ['http://localhost:61371']  
+CSRF_COOKIE_SECURE = False
+  
+CSRF_TRUSTED_ORIGINS = ['http://127.0.0.1:8000','http://localhost:61371']  
+
 CORS_ALLOW_ALL_ORIGINS = True
 
 
@@ -66,8 +67,6 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
-
-
 ]
 
 ROOT_URLCONF = 'dados.urls'
@@ -147,4 +146,3 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CORS_ALLOW_ALL_ORIGINS = True
