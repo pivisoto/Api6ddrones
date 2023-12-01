@@ -72,7 +72,7 @@ def CriaOrg(request):
     try:
         info = request.data
         usuario_existe = usuario.objects.filter(email=info['email']).first()
-        if usuario_existe and (usuario_existe.admOrg or usuario_existe.admGeral):
+        if usuario_existe and (usuario_existe.admGeral == True):
             organizacao_obj = organizacao.objects.create(
                 pj_pf=info['pj_pf'],
                 cpf_cnpj=info['cpf_cnpj'],
