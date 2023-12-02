@@ -5,7 +5,7 @@ class organizacao(models.Model):
     pj_pf = models.CharField(max_length=40)
     cpf_cnpj = models.CharField(unique=True)
     endContsocial = models.CharField(max_length=50)
-    docOrganizacao = models.BinaryField(null=True)
+    docOrganizacao = models.CharField(null=True)
     nomeOrg = models.CharField(max_length=30)
     responsavel = models.CharField(max_length=45,null=True)
 
@@ -16,6 +16,7 @@ class projeto(models.Model):
     idOrganizador = models.ForeignKey(organizacao,on_delete=models.CASCADE)
     fotosProj = models.BinaryField()
     idProjeto = models.AutoField(primary_key=True)
+    responsavel_projeto = models.CharField(max_length=40,null=True)
 
 class usuario(models.Model):
     nome = models.CharField(max_length=40)

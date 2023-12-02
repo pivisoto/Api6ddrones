@@ -3,4 +3,4 @@ from rest_framework import serializers;
 class proojetoSerializer(serializers.ModelSerializer):
         class Meta:
             model = projeto
-            fields = ('nomeProjeto','descProjeto','endProjeto','idOrganizador','fotosProj','idProjeto')        
+            fields = ('nomeProjeto','descProjeto','endProjeto','idOrganizador','fotosProj','idProjeto','responsavel_projeto')        

@@ -1,8 +1,10 @@
 from .models import *
 from django.http import JsonResponse
+from rest_framework.response import Response 
 from rest_framework.decorators import api_view
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.hashers import check_password
+from api.serializers.todos_serializer import todosUsuariosSerializer
 
 
 @api_view(['POST'])
@@ -46,7 +48,22 @@ def VerificaLogin(request):
             raise Exception({"mensagem": "Email não cadastrado no banco de dados"})
     except Exception as e:
         return JsonResponse({"mensagem": "Erro ao verificar login","error": str(e)}, status=401)
-
+    
+@api_view(['POST'])
+def AtualizaUsuario(request):
+    try:
+        info = request.data
+        usuario_existe = usuario.objects.filter(email=info['email']).first()
+        if usuario_existe:
+            usuario_existe.nome = info['nome']
+            usuario_existe.celular = info['celular']
+            usuario_existe.save()
+            return JsonResponse({'mensagem':'Usuario atualizado'})
+        else:
+            raise Exception({'usuario não encontrado'})
+    except Exception as e:
+        return JsonResponse({"mensagem": "Erro ao encontrar usuario","error": str(e)}, status=500)
+    
 @api_view(['GET'])
 def ExibeInfo(request):
     try:
@@ -68,7 +85,7 @@ def ExibeInfo(request):
         return JsonResponse({"mensagem": "Erro ao encontrar dados de usuario", "error": str(e)}, status=500)    
 
 @api_view(['POST'])
-def CriaOrg(request):
+def CriarOrg(request):
     try:
         info = request.data
         usuario_existe = usuario.objects.filter(email=info['email']).first()
@@ -99,7 +116,27 @@ def DefineIdOrganizador(request):
             return JsonResponse({'mensagem': 'Usuário não encontrado'}, status=400, safe=False)
     except Exception as e:
         return JsonResponse({'mensagem': f'Não foi possível definir o idOrganizador: {str(e)}'}, status=400, safe=False)
-    
+
+@api_view(['POST'])
+def AtualizaOrg(request):
+    try:
+        info = request.data
+        usuario_existe = usuario.objects.filter(email=info['email']).first()
+        organizacao_busca = organizacao.objects.filter(idOrganizador=usuario_existe.idOrganizador_id).first()
+        if usuario_existe and organizacao_busca:
+            organizacao_busca.nomeOrg = info['nomeOrg']
+            organizacao_busca.endContsocial = info['endContsocial']
+            organizacao_busca.pj_pf = info['pj_pf']
+            organizacao_busca.docOrganizacao = info['docOrganizacao']
+            organizacao_busca.cpf_cnpj = info['cpf_cnpj']
+            organizacao_busca.responsavel = info['responsavel']
+            organizacao_busca.save()
+            return JsonResponse({'mensagem':'Organizacao atualizado'})
+        else:
+            raise Exception({'usuario ou organizacao não encontrado'})
+    except Exception as e:
+        return JsonResponse({"mensagem": "Erro ao encontrar usuario ou organizacao","error": str(e)}, status=500)
+          
 @api_view(['GET'])
 def ExibeOrg(request):
     try:
@@ -137,6 +174,43 @@ def ExibeOrg(request):
     except Exception as e:
         return JsonResponse({"mensagem": "Erro ao encontrar dados de organização","error": str(e)}, status=500)
 
+@api_view(['POST'])
+def CriarProjeto(request):
+    try:
+        info = request.data
+        projeto_obj = projeto.objects.create(
+        nomeProjeto=info['nomeProjeto'],
+        responsavel_projeto=info['responsavel_projeto'],
+        descProjeto=info['descProjeto'],
+        endProjeto=info['endProjeto'],
+        idOrganizador_id=info['idOrganizador']
+        )
+        return JsonResponse({'mensagem': 'Cadastro do projeto efetuado', 'projeto': info['nomeProjeto']}, status=201)
+    except Exception as e:
+        return JsonResponse({'mensagem': f'Erro ao cadastrar usuário no banco: {str(e)}'}, status=500)
+    
+@api_view(['GET'])
+def ExibeProjeto(request):
+    try:
+        info = request.query_params
+        usuario_existe = usuario.objects.filter(email=info['email']).first()
+        projeto_busca = projeto.objects.filter(idProjeto=usuario_existe.idOrganizador_id).values('nomeProjeto','responsavel_projeto','descProjeto','endProjeto').first()
+        organizacao_busca = organizacao.objects.filter(idOrganizador=usuario_existe.idOrganizador_id).values('nomeOrg').first()
+        if usuario_existe and projeto_busca and organizacao_busca:
+            ResponseData = {
+                'nomeProjeto': projeto_busca['nomeProjeto'],
+                'responsavel_projeto': projeto_busca['responsavel_projeto'],
+                'descProjeto': projeto_busca['descProjeto'],
+                'endProjeto':projeto_busca['endProjeto'],
+                'nomeOrg': organizacao_busca['nomeOrg'],
+                'fotos':'vazio'
+            }
+            return JsonResponse(ResponseData)
+        else:
+            raise Exception('Não é usuario ou não possui organizacao/projeto')
+    except Exception as e:  
+        return JsonResponse({'mensagem':f'Não foi possivel exibir os dados do projeto : {str(e)}'})
+
 @api_view(['GET'])
 def VerificaAdmGeral(request):
     try:
@@ -148,6 +222,30 @@ def VerificaAdmGeral(request):
             raise Exception({"mensagem":"Usuario não é AdmGeral", 'usuario':str(usuario_existe.nome)})
     except Exception as e:
         return JsonResponse({"mensagem": "Erro ao verificar","error": str(e)}, status=500)
+    
+@api_view(['GET'])
+def VerificaAdmOrg(request):
+    try:
+        info = request.query_params
+        usuario_existe = usuario.objects.filter(email=info['email']).first()
+        if usuario_existe.admOrg == True:
+            return JsonResponse({'mensagem': 'O usuario é um admOrg','usuario':str(usuario_existe.nome)})
+        else:
+            raise Exception({"mensagem":"Usuario não é AdmOrg", 'usuario':str(usuario_existe.nome)})
+    except Exception as e:
+        return JsonResponse({"mensagem": "Erro ao verificar","error": str(e)}, status=500)
+
+@api_view(['GET'])
+def VerificaAdmInter(request):
+    try:
+        info = request.query_params
+        usuario_existe = usuario.objects.filter(email=info['email']).first()
+        if usuario_existe.admInter == True:
+            return JsonResponse({'mensagem': 'O usuario é um admInter','usuario':str(usuario_existe.nome)})
+        else:
+            raise Exception({"mensagem":"Usuario não é AdmInter", 'usuario':str(usuario_existe.nome)})
+    except Exception as e:
+        return JsonResponse({"mensagem": "Erro ao verificar","error": str(e)}, status=500)
 
 @api_view(['POST'])
 def ConcedeAdmOrg(request):
@@ -156,6 +254,7 @@ def ConcedeAdmOrg(request):
         usuario_existe = usuario.objects.filter(email=info['email']).first()
         if usuario_existe:
             usuario_existe.admOrg = True
+            usuario_existe.admInter = True
             usuario_existe.save()
             return JsonResponse({'mensagem':'Usuario é admin Org' ,'usuario':str(usuario_existe.nome)})
         else:
@@ -190,7 +289,7 @@ def ConcedeAdmInter(request):
             raise Exception({'usuario não encontrado'})
     except Exception as e:
         return JsonResponse({"mensagem": "Erro ao encontrar usuario","error": str(e)}, status=500)
-    
+        
 @api_view(['POST'])
 def RemoveAdmInter(request):
     try:
@@ -204,3 +303,9 @@ def RemoveAdmInter(request):
             raise Exception({'usuario não encontrado'})
     except Exception as e:
         return JsonResponse({"mensagem": "Erro ao encontrar usuario","error": str(e)}, status=500)
+    
+@api_view(['GET'])
+def ExibeTodosUsuarios(request):
+    all_data = usuario.objects.all()
+    serializer = todosUsuariosSerializer(all_data,many=True)
+    return JsonResponse(serializer.data,safe=False)
