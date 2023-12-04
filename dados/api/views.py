@@ -95,14 +95,17 @@ def CriarOrg(request):
     try:
         info = request.data
         usuario_existe = usuario.objects.filter(email=info['email']).first()
-        if usuario_existe and (usuario_existe.admGeral == True):
+        if usuario_existe and (usuario_existe.admOrg == True):
             organizacao_obj = organizacao.objects.create(
                 responsavel = info['responsavel'],
                 pj_pf=info['pj_pf'],
                 cpf_cnpj=info['cpf_cnpj'],
                 endContsocial=info['endContsocial'],
                 nomeOrg=info['nomeOrg'],
+                docOrganizacao=info['docOrganizacao']
             )
+            usuario_existe.idOrganizador_id = organizacao_obj.idOrganizador
+            usuario_existe.save()
             return JsonResponse({'mensagem': 'Organizacao cadastrada'})
         else:
             raise Exception({'mensagem':'Usuário nao e admin'})
@@ -122,14 +125,32 @@ def DefineIdOrganizador(request):
             return JsonResponse({'mensagem': 'Usuário não encontrado'}, status=400, safe=False)
     except Exception as e:
         return JsonResponse({'mensagem': f'Não foi possível definir o idOrganizador: {str(e)}'}, status=400, safe=False)
-
+    
+@api_view(['POST'])
+def RemovePessoaOrganizacao(request):
+    try:
+        info = request.data
+        usuario_existe = usuario.objects.filter(email=info['email']).first()
+        organizacao_busca = organizacao.objects.filter(idOrganizador = usuario_existe.idOrganizador_id).first()
+        if usuario_existe and organizacao_busca:
+            usuario_existe.idOrganizador_id = None
+            usuario_existe.idProjeto_id = None
+            usuario_existe.admOrg = False
+            usuario_existe.admInter = False
+            usuario_existe.save()
+            return JsonResponse({'mensagem': 'Usuario removido da organização'})
+        else:
+            return JsonResponse({'mensagem': 'Usuário não encontrado'}, status=400, safe=False)
+    except Exception as e:
+        return JsonResponse({'mensagem': f'Não foi possivel remover o usuario: {str(e)}'}, status=400, safe=False)
+    
 @api_view(['POST'])
 def AtualizaOrg(request):
     try:
         info = request.data
         usuario_existe = usuario.objects.filter(email=info['email']).first()
         organizacao_busca = organizacao.objects.filter(idOrganizador=usuario_existe.idOrganizador_id).first()
-        if usuario_existe and organizacao_busca:
+        if usuario_existe and organizacao_busca and usuario_existe.admOrg == True:
             organizacao_busca.nomeOrg = info['nomeOrg']
             organizacao_busca.endContsocial = info['endContsocial']
             organizacao_busca.pj_pf = info['pj_pf']
@@ -139,7 +160,7 @@ def AtualizaOrg(request):
             organizacao_busca.save()
             return JsonResponse({'mensagem':'Organizacao atualizado'})
         else:
-            raise Exception({'usuario ou organizacao não encontrado'})
+            raise Exception({'usuario ou organizacao não encontrado , usuario não tem permissão'})
     except Exception as e:
         return JsonResponse({"mensagem": "Erro ao encontrar usuario ou organizacao","error": str(e)}, status=500)
           
@@ -148,52 +169,87 @@ def ExibeOrg(request):
     try:
         info = request.query_params
         usuario_existe = usuario.objects.filter(email=info['email']).first()
-        organizacao_busca = organizacao.objects.filter(idOrganizador=usuario_existe.idOrganizador_id).values('responsavel','nomeOrg','cpf_cnpj','idOrganizador','endContsocial','pj_pf').first()
+        organizacao_busca = organizacao.objects.filter(idOrganizador=usuario_existe.idOrganizador_id).first()
         if organizacao_busca:
-            organizacao_responsavel = organizacao_busca['responsavel']
-            organizacao_cpf = organizacao_busca['cpf_cnpj']
-            organizacao_id = organizacao_busca['idOrganizador']
-            organizacao_endereco = organizacao_busca['endContsocial']
-            organizacao_razao = organizacao_busca['pj_pf']
-            organizacao_nome = organizacao_busca['nomeOrg']
+            organizacao_responsavel = organizacao_busca.responsavel
+            organizacao_cpf = organizacao_busca.cpf_cnpj
+            organizacao_id = organizacao_busca.idOrganizador
+            organizacao_endereco = organizacao_busca.endContsocial
+            organizacao_razao = organizacao_busca.pj_pf
+            organizacao_nome = organizacao_busca.nomeOrg
+            organizacao_doc = organizacao_busca.docOrganizacao
+            projetos_associados = projeto.objects.filter(idOrganizador=organizacao_busca).values_list('nomeProjeto', flat=True)
             ResponseData = {
                 'responsavel': organizacao_responsavel,
-                'razao_social': organizacao_nome,
+                'nomeOrg': organizacao_nome,
                 'pj_pf': organizacao_razao,
-                'cpf_cnpj':organizacao_cpf,
+                'cpf_cnpj': organizacao_cpf,
                 'endContsocial': organizacao_endereco,
-                'id' : organizacao_id,
-                'projetos_associados':'vazio'
+                'id': organizacao_id,
+                'docOrganizacao': organizacao_doc,
+                'projetos_associados': list(projetos_associados)
             }
             return JsonResponse(ResponseData)
         else:
             ResponseData = {
-                'razao_social':'não associado',
+                'razao_social': 'não associado',
                 'pj_pf': 'vazio',
-                'cpf_cnpj' : 'vazio',
+                'cpf_cnpj': 'vazio',
                 'endContsocial': 'vazio',
-                'id' : 'vazio',
-                'projetos_associados':'vazio',
-                
+                'id': 'vazio',
+                'projetos_associados': 'vazio',
             }
             return JsonResponse(ResponseData)
     except Exception as e:
-        return JsonResponse({"mensagem": "Erro ao encontrar dados de organização","error": str(e)}, status=500)
+        return JsonResponse({"mensagem": "Erro ao encontrar dados de organização", "error": str(e)}, status=500)
 
 @api_view(['POST'])
 def CriarProjeto(request):
     try:
         info = request.data
-        projeto_obj = projeto.objects.create(
-        nomeProjeto=info['nomeProjeto'],
-        responsavel_projeto=info['responsavel_projeto'],
-        descProjeto=info['descProjeto'],
-        endProjeto=info['endProjeto'],
-        idOrganizador_id=info['idOrganizador']
-        )
-        return JsonResponse({'mensagem': 'Cadastro do projeto efetuado', 'projeto': info['nomeProjeto']}, status=201)
+        usuario_existe = usuario.objects.filter(email=info['email']).first()
+        if usuario_existe and usuario_existe.admInter:
+            organizacao_busca = organizacao.objects.filter(idOrganizador=usuario_existe.idOrganizador_id).first()
+            if organizacao_busca:
+                projeto_obj = projeto.objects.create(
+                    nomeProjeto=info['nomeProjeto'],
+                    responsavel_projeto=info['responsavel_projeto'],
+                    descProjeto=info['descProjeto'],
+                    fotosProj=info['fotosProj'],
+                    endProjeto=info['endProjeto'],
+                    idOrganizador=organizacao_busca
+                )
+                usuario_existe.idProjeto = projeto_obj
+                usuario_existe.save()
+                organizacao_busca.idProjeto = projeto_obj
+                organizacao_busca.save()
+                return JsonResponse({'mensagem': 'Cadastro do projeto efetuado', 'projeto': info['nomeProjeto']}, status=201)
+            else:
+                raise Exception('Organização não encontrada')
+        else:
+            raise Exception('Usuário não autorizado ou informações inválidas')
+
     except Exception as e:
         return JsonResponse({'mensagem': f'Erro ao cadastrar usuário no banco: {str(e)}'}, status=500)
+    
+@api_view(['POST'])
+def AtualizaProjeto(request):
+    try:
+        info = request.data
+        usuario_existe = usuario.objects.filter(email=info['email']).first()
+        projeto_busca = projeto.objects.filter(idProjeto=usuario_existe.idProjeto_id).first()
+        if usuario_existe and projeto_busca and usuario_existe.admInter == True:
+            projeto_busca.nomeOrg = info['nomeProjeto']
+            projeto_busca.endContsocial = info['descProjeto']
+            projeto_busca.pj_pf = info['endProjeto']
+            projeto_busca.docOrganizacao = info['fotosProj']
+            projeto_busca.cpf_cnpj = info['responsavel_projeto']
+            projeto_busca.save()
+            return JsonResponse({'mensagem':'Organizacao atualizado'})
+        else:
+            raise Exception({'usuario ou organizacao não encontrado , usuario não tem permissão'})
+    except Exception as e:
+        return JsonResponse({"mensagem": "Erro ao encontrar usuario ou organizacao","error": str(e)}, status=500)   
     
 @api_view(['GET'])
 def ExibeProjeto(request):
@@ -371,3 +427,53 @@ def ExibeTodosProjetos(request):
     all_data = projeto.objects.all()
     serializer = proojetoSerializer(all_data,many=True)
     return JsonResponse(serializer.data,safe=False)
+
+@api_view(['POST'])
+def ApagaOrg(request):
+    try:
+        info = request.data
+        idOrg = info['idOrganizador']
+        print(idOrg)
+        usuario_existe = usuario.objects.filter(email=info['email']).first()
+        organizacao_busca = organizacao.objects.filter(idOrganizador=usuario_existe.idOrganizador_id).first()
+        if usuario_existe and idOrg == organizacao_busca.idOrganizador and usuario_existe.admOrg:
+            usuarios_associados_org = usuario.objects.filter(idOrganizador_id=idOrg).first()
+            if usuarios_associados_org:
+                usuarios_associados_org.idOrganizador_id = None
+                usuarios_associados_org.save()
+            projeto_busca = projeto.objects.filter(idProjeto=organizacao_busca.idProjeto_id).first()
+            if projeto_busca:
+                usuarios_associados_proj = usuario.objects.filter(idProjeto_id=projeto_busca.idProjeto).first()
+                if usuarios_associados_proj:
+                    usuarios_associados_proj.idProjeto_id = None
+                    usuarios_associados_proj.save()
+                projeto_busca.delete()
+            organizacao_busca.delete()
+            return JsonResponse({'mensagem': 'Organização e seus projetos foram deletados'}, safe=False)
+        else:
+            raise Exception('Usuário ou organização não encontrado, ou usuário não tem permissão')
+    except Exception as e:
+        return JsonResponse({'mensagem': f"Não foi possível deletar a organização. Erro: {e}"}, safe=False)
+
+@api_view(['POST'])
+def ApagaProjeto(request):
+    try:
+        info = request.data
+        idProj = info['idProjeto']
+        usuario_existe = usuario.objects.filter(email=info['email']).first()
+        projeto_busca = projeto.objects.filter(idProjeto=usuario_existe.idProjeto_id).first()
+        if usuario_existe and idProj == projeto_busca.idProjeto and usuario_existe.admInter == True:
+            usuarios_associados_proj = usuario.objects.filter(idProjeto_id=idProj).first()
+            if usuarios_associados_proj:
+                usuarios_associados_proj.idProjeto_id = None
+                usuarios_associados_proj.save()
+            organizacao_busca = organizacao.objects.filter(idProjeto_id=projeto_busca.idProjeto).first()
+            if organizacao_busca:
+                organizacao_busca.idProjeto_id = None
+                organizacao_busca.save()
+                projeto_busca.delete()
+            return JsonResponse({'mensagem': 'Projeto foi deletado'}, safe=False)
+        else:
+            raise Exception('Usuário ou projeto não encontrado, ou usuário não tem permissão')
+    except Exception as e:
+        return JsonResponse({'mensagem': f"Não foi possível deletar o projeto. Erro: {e}"}, safe=False)

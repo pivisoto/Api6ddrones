@@ -1,7 +1,5 @@
-from api.models import usuario;
-from api.models import organizacao;
+from api.models import usuario , organizacao;
 from rest_framework import serializers;
-from rest_framework import serializers
 
 class todosUsuariosSerializer(serializers.ModelSerializer):
     nomeOrg = serializers.SerializerMethodField()
