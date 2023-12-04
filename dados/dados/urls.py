@@ -22,5 +22,9 @@ urlpatterns = [
     path('verificaAdmGeral/',views.VerificaAdmGeral),
     path('verificaAdmOrg/',views.VerificaAdmOrg),
     path('verificaAdmInter/',views.VerificaAdmInter),
-    path('exibeTodosUsuarios/',views.ExibeTodosUsuarios)
+    path('recebeEmail/',views.RecebeEmail),
+    path('atualizaSenha/',views.AtualizaSenha),
+    path('exibeTodosUsuarios/',views.ExibeTodosUsuarios),
+    path('exibeTodasOrganizacoes/',views.ExibeTodasOrganizacoes),
+    path('exibeTodosProjetos/',views.ExibeTodosProjetos)
 ]

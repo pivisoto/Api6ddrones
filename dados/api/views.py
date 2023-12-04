@@ -4,8 +4,10 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.hashers import check_password
-from api.serializers.todos_serializer import todosUsuariosSerializer
-
+from api.serializers import todosUsuariosSerializer,organizacaoSerializer,proojetoSerializer
+from django.core.mail import send_mail
+from random import randrange
+import re
 
 @api_view(['POST'])
 def VerificaUsuarioExiste(request):
@@ -16,20 +18,24 @@ def VerificaUsuarioExiste(request):
             return JsonResponse({'mensagem': 'Este email já está cadastrado'}, status=200)
         else:
             CadastraUsuario(request)
-            return JsonResponse({'mensagem': 'Usuário não cadastrado'})
+            return JsonResponse({'mensagem': 'Usuário cadastrado'})
     except Exception as e:
         return JsonResponse({'mensagem': f'Erro na verificação de existência do email: {str(e)}'}, status=500)
 
 def CadastraUsuario(request):
     try:
         info = request.data
-        usuario_obj = usuario.objects.create(
-            nome=info['nome'],
-            email=info['email'],
-            senha=info['senha'],
-            celular=info['celular'],
-        )
-        return JsonResponse({'mensagem': 'Cadastro do usuário efetuado', 'usuario_id': usuario_obj.id}, status=201)
+        senha_teste = info['senha']
+        if (len(senha_teste) >= 8 and any(char.isdigit() for char in senha_teste) and any(char.isupper() for char in senha_teste) and re.search(r'[!@#$%^&*(),.?":{}|<>]', senha_teste)):
+            usuario_obj = usuario.objects.create(
+                nome=info['nome'],
+                email=info['email'],
+                senha=info['senha'],
+                celular=info['celular'],
+            )
+            return JsonResponse({'mensagem': 'Cadastro do usuário efetuado', 'usuario_id': usuario_obj.id}, status=201)
+        else:
+            raise Exception('Senha não corresponde aos requisitos')   
     except Exception as e:
         return JsonResponse({'mensagem': f'Erro ao cadastrar usuário no banco: {str(e)}'}, status=500)
 
@@ -194,7 +200,7 @@ def ExibeProjeto(request):
     try:
         info = request.query_params
         usuario_existe = usuario.objects.filter(email=info['email']).first()
-        projeto_busca = projeto.objects.filter(idProjeto=usuario_existe.idOrganizador_id).values('nomeProjeto','responsavel_projeto','descProjeto','endProjeto').first()
+        projeto_busca = projeto.objects.filter(idProjeto=usuario_existe.idOrganizador_id).values('nomeProjeto','responsavel_projeto','descProjeto','endProjeto','fotosProj','idProjeto').first()
         organizacao_busca = organizacao.objects.filter(idOrganizador=usuario_existe.idOrganizador_id).values('nomeOrg').first()
         if usuario_existe and projeto_busca and organizacao_busca:
             ResponseData = {
@@ -203,7 +209,8 @@ def ExibeProjeto(request):
                 'descProjeto': projeto_busca['descProjeto'],
                 'endProjeto':projeto_busca['endProjeto'],
                 'nomeOrg': organizacao_busca['nomeOrg'],
-                'fotos':'vazio'
+                'fotos':projeto_busca['fotosProj'],
+                'idProjeto':projeto_busca['idProjeto']
             }
             return JsonResponse(ResponseData)
         else:
@@ -222,7 +229,7 @@ def VerificaAdmGeral(request):
             raise Exception({"mensagem":"Usuario não é AdmGeral", 'usuario':str(usuario_existe.nome)})
     except Exception as e:
         return JsonResponse({"mensagem": "Erro ao verificar","error": str(e)}, status=500)
-    
+#testado    
 @api_view(['GET'])
 def VerificaAdmOrg(request):
     try:
@@ -234,7 +241,7 @@ def VerificaAdmOrg(request):
             raise Exception({"mensagem":"Usuario não é AdmOrg", 'usuario':str(usuario_existe.nome)})
     except Exception as e:
         return JsonResponse({"mensagem": "Erro ao verificar","error": str(e)}, status=500)
-
+#testado
 @api_view(['GET'])
 def VerificaAdmInter(request):
     try:
@@ -246,7 +253,7 @@ def VerificaAdmInter(request):
             raise Exception({"mensagem":"Usuario não é AdmInter", 'usuario':str(usuario_existe.nome)})
     except Exception as e:
         return JsonResponse({"mensagem": "Erro ao verificar","error": str(e)}, status=500)
-
+#testado
 @api_view(['POST'])
 def ConcedeAdmOrg(request):
     try:
@@ -261,7 +268,7 @@ def ConcedeAdmOrg(request):
             raise Exception({'usuario não encontrado'})
     except Exception as e:
         return JsonResponse({"mensagem": "Erro ao encontrar usuario","error": str(e)}, status=500)
-    
+#testado   
 @api_view(['POST'])
 def RemoveAdmOrg(request):
     try:
@@ -275,7 +282,7 @@ def RemoveAdmOrg(request):
             raise Exception({'usuario não encontrado'})
     except Exception as e:
         return JsonResponse({"mensagem": "Erro ao encontrar usuario","error": str(e)}, status=500)
-    
+#testado    
 @api_view(['POST'])
 def ConcedeAdmInter(request):
     try:
@@ -289,7 +296,7 @@ def ConcedeAdmInter(request):
             raise Exception({'usuario não encontrado'})
     except Exception as e:
         return JsonResponse({"mensagem": "Erro ao encontrar usuario","error": str(e)}, status=500)
-        
+#testado       
 @api_view(['POST'])
 def RemoveAdmInter(request):
     try:
@@ -303,9 +310,64 @@ def RemoveAdmInter(request):
             raise Exception({'usuario não encontrado'})
     except Exception as e:
         return JsonResponse({"mensagem": "Erro ao encontrar usuario","error": str(e)}, status=500)
-    
+
+#testado
+def MandaEmail(email,codigo):
+    send_mail(
+    "Código de verificação",
+    f"Este é o código para trocar sua senha {codigo}",
+    "from@example.com",
+    [email],
+    fail_silently=False,
+)
+#testado    
+@api_view(['GET'])
+def RecebeEmail(request):
+    try:
+        info = request.query_params
+        codigo = randrange(10000,99999)
+        email = info['email']
+        usuario_existe = usuario.objects.filter(email=info['email']).first()
+        if usuario_existe:
+            MandaEmail(email,codigo)
+            ResponseData = {
+                'codigo_usuario' : codigo
+            }
+            return JsonResponse(ResponseData)
+        else:
+            raise Exception('Email não cadastrado')
+    except Exception as e:
+        return JsonResponse(f'Nao foi possivel enviar o email , {str(e)}',safe=False)
+#testado       
+@api_view(['POST'])
+def AtualizaSenha(request):
+    try:
+        info = request.data
+        senha = info['senha']
+        usuario_existe = usuario.objects.filter(email=info['email']).first()
+        if usuario_existe and (len(senha) >= 8 and any(char.isdigit() for char in senha) and any(char.isupper() for char in senha) and re.search(r'[!@#$%^&*(),.?":{}|<>]', senha)):
+            usuario_existe.senha = senha
+            usuario_existe.save()
+            return JsonResponse({'mensagem': 'Senha atualizada'}, safe=False)
+        else:
+            raise Exception('Usuário não existe ou a senha não corresponde ao requisitos')
+    except Exception as e:
+        return JsonResponse({'mensagem': f"Não foi possível mudar a senha. Erro: {e}"}, safe=False)
+#testado    
 @api_view(['GET'])
 def ExibeTodosUsuarios(request):
     all_data = usuario.objects.all()
     serializer = todosUsuariosSerializer(all_data,many=True)
+    return JsonResponse(serializer.data,safe=False)
+    
+@api_view(['GET'])
+def ExibeTodasOrganizacoes(request):
+    all_data = organizacao.objects.all()
+    serializer = organizacaoSerializer(all_data,many=True)
+    return JsonResponse(serializer.data,safe=False)
+
+@api_view(['GET'])
+def ExibeTodosProjetos(request):
+    all_data = projeto.objects.all()
+    serializer = proojetoSerializer(all_data,many=True)
     return JsonResponse(serializer.data,safe=False)

@@ -14,7 +14,7 @@ class projeto(models.Model):
     descProjeto = models.CharField()
     endProjeto = models.CharField(max_length=50)
     idOrganizador = models.ForeignKey(organizacao,on_delete=models.CASCADE)
-    fotosProj = models.BinaryField()
+    fotosProj = models.CharField(null=True)
     idProjeto = models.AutoField(primary_key=True)
     responsavel_projeto = models.CharField(max_length=40,null=True)
 

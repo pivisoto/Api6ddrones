@@ -4,7 +4,6 @@ import re
 
 class usuarioSerializer(serializers.ModelSerializer):
     senha = serializers.CharField(write_only=True)
-
     #necessariamente esse nome validate_nome_do_campo
     def validate_password(self,senha):
         if not re.search('[0-9]',senha):
