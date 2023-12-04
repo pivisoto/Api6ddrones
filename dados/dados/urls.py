@@ -17,6 +17,8 @@ urlpatterns = [
     path('criarProjeto/',views.CriarProjeto),
     path('atualizaProjeto/',views.AtualizaProjeto),
     path('exibeProjeto/',views.ExibeProjeto),
+    path('defineIdProjeto/',views.DefineIdProjeto),
+    path('removePessoaProjeto/',views.RemovePessoaProjeto),
     path('concedeAdmOrg/',views.ConcedeAdmOrg),
     path('removeAdmOrg/',views.RemoveAdmOrg),
     path('concedeAdmInter/',views.ConcedeAdmInter),

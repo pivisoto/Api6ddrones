@@ -117,9 +117,10 @@ def DefineIdOrganizador(request):
     try:
         info = request.data
         usuario_existe = usuario.objects.filter(email=info['email']).first()
-        if usuario_existe is not None:
-            usuario_existe.idOrganizador_id = info['idOrganizador']
-            usuario_existe.save()
+        usuario_adicao = usuario.objects.filter(email=info['emailAdicao']).first()
+        if usuario_existe is not None and usuario_adicao is not None and usuario_existe.admOrg == True:
+            usuario_adicao.idOrganizador_id = info['idOrganizador']
+            usuario_adicao.save()
             return JsonResponse({'mensagem': 'ID do Organizador definido com sucesso'})
         else:
             return JsonResponse({'mensagem': 'Usuário não encontrado'}, status=400, safe=False)
@@ -132,7 +133,7 @@ def RemovePessoaOrganizacao(request):
         info = request.data
         usuario_existe = usuario.objects.filter(email=info['email']).first()
         organizacao_busca = organizacao.objects.filter(idOrganizador = usuario_existe.idOrganizador_id).first()
-        if usuario_existe and organizacao_busca:
+        if usuario_existe and organizacao_busca and usuario_existe.admOrg == True:
             usuario_existe.idOrganizador_id = None
             usuario_existe.idProjeto_id = None
             usuario_existe.admOrg = False
@@ -191,15 +192,7 @@ def ExibeOrg(request):
             }
             return JsonResponse(ResponseData)
         else:
-            ResponseData = {
-                'razao_social': 'não associado',
-                'pj_pf': 'vazio',
-                'cpf_cnpj': 'vazio',
-                'endContsocial': 'vazio',
-                'id': 'vazio',
-                'projetos_associados': 'vazio',
-            }
-            return JsonResponse(ResponseData)
+            return JsonResponse({'Não possui organizacao'})
     except Exception as e:
         return JsonResponse({"mensagem": "Erro ao encontrar dados de organização", "error": str(e)}, status=500)
 
@@ -208,7 +201,7 @@ def CriarProjeto(request):
     try:
         info = request.data
         usuario_existe = usuario.objects.filter(email=info['email']).first()
-        if usuario_existe and usuario_existe.admInter:
+        if usuario_existe and usuario_existe.admInter == True:
             organizacao_busca = organizacao.objects.filter(idOrganizador=usuario_existe.idOrganizador_id).first()
             if organizacao_busca:
                 projeto_obj = projeto.objects.create(
@@ -237,13 +230,14 @@ def AtualizaProjeto(request):
     try:
         info = request.data
         usuario_existe = usuario.objects.filter(email=info['email']).first()
-        projeto_busca = projeto.objects.filter(idProjeto=usuario_existe.idProjeto_id).first()
+        projeto_busca = projeto.objects.filter(idProjeto=info['idProjeto']).first()
+        usuario_pertence = usuario.objects.filter(idProjeto=projeto_busca.idProjeto).first()
         if usuario_existe and projeto_busca and usuario_existe.admInter == True:
-            projeto_busca.nomeOrg = info['nomeProjeto']
-            projeto_busca.endContsocial = info['descProjeto']
-            projeto_busca.pj_pf = info['endProjeto']
-            projeto_busca.docOrganizacao = info['fotosProj']
-            projeto_busca.cpf_cnpj = info['responsavel_projeto']
+            projeto_busca.nomeProjeto = info['nomeProjeto']
+            projeto_busca.descProjeto = info['descProjeto']
+            projeto_busca.endProjeto = info['endProjeto']
+            projeto_busca.fotosProj = info['fotosProj']
+            projeto_busca.responsavel_projeto= info['responsavel_projeto']
             projeto_busca.save()
             return JsonResponse({'mensagem':'Organizacao atualizado'})
         else:
@@ -256,7 +250,7 @@ def ExibeProjeto(request):
     try:
         info = request.query_params
         usuario_existe = usuario.objects.filter(email=info['email']).first()
-        projeto_busca = projeto.objects.filter(idProjeto=usuario_existe.idOrganizador_id).values('nomeProjeto','responsavel_projeto','descProjeto','endProjeto','fotosProj','idProjeto').first()
+        projeto_busca = projeto.objects.filter(idProjeto=usuario_existe.idProjeto_id).values('nomeProjeto','responsavel_projeto','descProjeto','endProjeto','fotosProj','idProjeto').first()
         organizacao_busca = organizacao.objects.filter(idOrganizador=usuario_existe.idOrganizador_id).values('nomeOrg').first()
         if usuario_existe and projeto_busca and organizacao_busca:
             ResponseData = {
@@ -273,6 +267,36 @@ def ExibeProjeto(request):
             raise Exception('Não é usuario ou não possui organizacao/projeto')
     except Exception as e:  
         return JsonResponse({'mensagem':f'Não foi possivel exibir os dados do projeto : {str(e)}'})
+    
+@api_view(['POST'])
+def DefineIdProjeto(request):
+    try:
+        info = request.data
+        usuario_existe = usuario.objects.filter(email=info['email']).first()
+        usuario_adicao = usuario.objects.filter(email=info['emailAdicao']).first()
+        if usuario_existe is not None and usuario_adicao is not None and usuario_existe.admInter == True:
+            usuario_adicao.idProjeto_id = info['idProjeto']
+            usuario_adicao.save()
+            return JsonResponse({'mensagem': 'Id do Projeto definido com sucesso'})
+        else:
+            return JsonResponse({'mensagem': 'Usuário não encontrado'}, status=400, safe=False)
+    except Exception as e:
+        return JsonResponse({'mensagem': f'Não foi possível definir o idProjeto: {str(e)}'}, status=400, safe=False)
+
+@api_view(['POST'])
+def RemovePessoaProjeto(request):
+    try:
+        info = request.data
+        usuario_existe = usuario.objects.filter(email=info['email']).first()
+        projeto_busca = projeto.objects.filter(idProjeto = usuario_existe.idProjeto_id).first()
+        if usuario_existe and projeto_busca and usuario_existe.admInter == True:
+            usuario_existe.idProjeto_id = None
+            usuario_existe.save()
+            return JsonResponse({'mensagem': 'Usuario removido do Projeto'})
+        else:
+            return JsonResponse({'mensagem': 'Usuário não encontrado'}, status=400, safe=False)
+    except Exception as e:
+        return JsonResponse({'mensagem': f'Não foi possivel remover o usuario: {str(e)}'}, status=400, safe=False)
 
 @api_view(['GET'])
 def VerificaAdmGeral(request):
@@ -436,7 +460,7 @@ def ApagaOrg(request):
         print(idOrg)
         usuario_existe = usuario.objects.filter(email=info['email']).first()
         organizacao_busca = organizacao.objects.filter(idOrganizador=usuario_existe.idOrganizador_id).first()
-        if usuario_existe and idOrg == organizacao_busca.idOrganizador and usuario_existe.admOrg:
+        if usuario_existe and idOrg == organizacao_busca.idOrganizador and usuario_existe.admOrg == True:
             usuarios_associados_org = usuario.objects.filter(idOrganizador_id=idOrg).first()
             if usuarios_associados_org:
                 usuarios_associados_org.idOrganizador_id = None
